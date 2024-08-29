@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>go-webserver</title>
+        <style>
+            body {
+                font-family: 'Fira Code', monospace; /* GitHub에서 사용하는 폰트 */
+                background-color: #0d1117; /* GitHub Dark Background */
+                color: #c9d1d9; /* GitHub Dark Text */
+                padding: 20px;
+                margin: 0;
+            }
+            .listing {
+                max-width: 800px;
+                margin: 0;
+            }
+            .item {
+                padding: 5px 0;
+            }
+            .directory a {
+                color: #58a6ff; /* GitHub Blue for directories */
+            }
+            .file a {
+                color: #e06c75; /* GitHub Red for files */
+            }
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            .header {
+                color: #e6c07b; /* GitHub Light Yellow for header */
+                font-size: 1em;
+            }
+            .prompt {
+                color: #9da5b4; /* GitHub Prompt Color */
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <span class="prompt">webserver@{{.Host}}:~$</span> ls -al {{if or (eq .Path "~") (eq .Path "")}}{{else}}~{{.Path}}{{end}}
+        </div>
+        <div class="listing">
+            <div>total {{len .Items}}</div>
+            <div class="item directory">
+                drwxr--r-- webserver webserver <a href=".">.</a>
+            </div>
+            <div class="item directory">
+                drwxr--r-- webserver webserver <a href="..">..</a>
+            </div>
+            {{range .Items}}
+                <div class="item {{.Class}}">
+                    drwxr--r-- webserver webserver <a href="{{.URL}}">{{.Name}}</a>
+                </div>
+            {{end}}
+        </div>
+    </body>
+</html>

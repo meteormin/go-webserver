@@ -9,6 +9,7 @@ import (
 func main() {
 	// 기본 라우트: 파일 서빙
 	http.HandleFunc("/wget", handler.Wget(handler.StaticDir))
+	http.HandleFunc("/upload", handler.Upload(handler.StaticDir))
 	http.HandleFunc("/", handler.Static())
 
 	// 서버 시작

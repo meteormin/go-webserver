@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"golang.org/x/net/html"
 	"io"
@@ -15,19 +16,34 @@ var WgetDir = "downloads"
 
 func Wget(basePath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		queryParams := r.URL.Query()
-		queryUrl := queryParams.Get("url")
-		parsedUrl, err := url.Parse(queryUrl)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if r.Method == http.MethodPost && r.Header.Get("Content-Type") == "application/json" {
+			post(w, r, basePath)
+		} else {
+			http.Redirect(w, r, "/", http.StatusFound)
 		}
-		downloadPath := filepath.Join(basePath, WgetDir, parsedUrl.Host, parsedUrl.Path)
-		err = downloadPage(queryUrl, downloadPath)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		http.Redirect(w, r, strings.Replace(downloadPath, "web", "", 1), http.StatusFound)
 	}
+}
+
+func post(w http.ResponseWriter, r *http.Request, basePath string) {
+	var jsonMap map[string]interface{}
+	jsonData := r.Body
+	err := json.NewDecoder(jsonData).Decode(&jsonMap)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	queryUrl := jsonMap["url"].(string)
+	parsedUrl, err := url.Parse(queryUrl)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	downloadPath := filepath.Join(basePath, WgetDir, parsedUrl.Host, parsedUrl.Path)
+	err = downloadPage(queryUrl, downloadPath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	http.Redirect(w, r, strings.Replace(downloadPath, "web", "", 1), http.StatusFound)
 }
 
 // downloadFile downloads a file from the specified URL and saves it to the given filepath.
