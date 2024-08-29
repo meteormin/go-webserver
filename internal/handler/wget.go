@@ -56,6 +56,11 @@ func downloadPage(pageUrl string, baseDir string) error {
 	}
 	defer resp.Body.Close()
 
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.Contains(contentType, "text/html") {
+		return saveContentBasedOnMimeType(pageUrl, baseDir)
+	}
+
 	doc, err := html.Parse(resp.Body)
 	if err != nil {
 		return err
@@ -114,7 +119,10 @@ func downloadPage(pageUrl string, baseDir string) error {
 				relPath := filepath.Join(baseDir, resourceUrlParsed.Path)
 
 				// Ensure the directory exists
-				os.MkdirAll(filepath.Dir(relPath), os.ModePerm)
+				err = os.MkdirAll(filepath.Dir(relPath), os.ModePerm)
+				if err != nil {
+					return
+				}
 
 				fmt.Println("Downloading resource:", fullUrl.String(), "to", relPath)
 				if err := downloadFile(relPath, fullUrl.String()); err != nil {
@@ -154,6 +162,58 @@ func downloadPage(pageUrl string, baseDir string) error {
 	defer out.Close()
 
 	if err := html.Render(out, doc); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// saveContentBasedOnMimeType downloads content and saves it to a file based on its MIME type.
+func saveContentBasedOnMimeType(contentUrl string, baseDir string) error {
+	resp, err := http.Get(contentUrl)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Parse the URL
+	parsedUrl, err := url.Parse(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	// Determine the MIME type and file extension
+	contentType := resp.Header.Get("Content-Type")
+	var fileExtension string
+	switch contentType {
+	case "image/jpeg":
+		fileExtension = ".jpg"
+	case "image/png":
+		fileExtension = ".png"
+	case "image/gif":
+		fileExtension = ".gif"
+	case "text/html":
+		fileExtension = ".html"
+	default:
+		// Extract extension from URL if content type is not explicitly handled
+		fileExtension = filepath.Ext(parsedUrl.Path)
+		if fileExtension == "" {
+			fileExtension = ".bin" // Default to .bin for unknown types
+		}
+	}
+
+	// Create the file path
+	filePath := filepath.Join(baseDir, parsedUrl.Host, parsedUrl.Path)
+
+	// Ensure the directory exists
+	err = os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	// Save the file
+	fmt.Println("Saving file:", filePath)
+	if err := downloadFile(filePath, contentUrl); err != nil {
 		return err
 	}
 
