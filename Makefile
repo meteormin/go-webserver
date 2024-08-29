@@ -32,10 +32,11 @@ run:
 build:
 	go build -o build/go-webserver ./main.go
 
-##run-docker: run web server docker
+##run-docker port={outbound port}: run web server docker
 .PHONY: run-docker
 run-docker:
 	docker run -d --name go-webserver \
+		$(if $(port),-p $(port):8080) \
 		--network shared_network \
 		-v ./web:/go-webserver/web go-webserver
 
