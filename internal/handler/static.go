@@ -79,7 +79,11 @@ func Static() http.HandlerFunc {
 		log.Printf("Request: %s %s", r.Method, r.URL.Path)
 		path := r.URL.Path
 		if path != "/" && strings.HasSuffix(path, "/") {
-			path = filepath.Join(path, "index.html")
+			log.Printf("Check has index.html in %s", filepath.Join(path, "index.html"))
+			if _, err := os.Stat(filepath.Join(StaticDir, path, "index.html")); err == nil {
+				log.Printf("has index.html in %s", path)
+				path = filepath.Join(path, "index.html")
+			}
 		}
 		fullPath := filepath.Join(StaticDir, path)
 		if isDir(fullPath) {
