@@ -7,7 +7,7 @@
 ### 1. Start Go Web Server
 
 ```bash
-$ make start env=default compose=go-webserver
+$ make run
 ```
 
 ### 2. Check Go Web Server
@@ -17,7 +17,7 @@ $ make start env=default compose=go-webserver
 ## How to build
 
 ```bash
-$ make build env=default compose=go-webserver
+$ make build
 ```
 
 ## Docker
